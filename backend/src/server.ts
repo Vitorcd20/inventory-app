@@ -17,18 +17,22 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
+
+// CORS atualizado com URLs específicas
 app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:5173', 
     'http://localhost:4173',
-    process.env.FRONTEND_URL || 'https://seu-projeto.vercel.app',
+    'https://inventory-app-45as.vercel.app', // URL específica da Vercel
+    process.env.FRONTEND_URL,
     /https:\/\/.*\.vercel\.app$/ 
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(morgan("combined"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -39,8 +43,6 @@ app.use("/api/products", requireAuth, productRoutes);
 app.use("/api/categories", requireAuth, categoryRoutes);
 app.use("/api/sales", requireAuth, saleRoutes);
 app.use("/api/dashboard", requireAuth, dashboardRoutes);
-
-
 
 app.get("/health", (req: Request, res: Response) => {
   res.json({
@@ -123,9 +125,9 @@ app.use("*", (req: Request, res: Response) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`📚 API info: http://localhost:${PORT}/api`);
-  console.log(`🔐 Auth: http://localhost:${PORT}/api/auth`);
-  console.log(`📈 Dashboard: http://localhost:${PORT}/api/dashboard`);
+  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`API info: http://localhost:${PORT}/api`);
+  console.log(`Auth: http://localhost:${PORT}/api/auth`);
+  console.log(`Dashboard: http://localhost:${PORT}/api/dashboard`);
 });
