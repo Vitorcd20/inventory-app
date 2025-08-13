@@ -1,0 +1,267 @@
+# Sistema de Estoque - API
+
+Sistema completo de controle de estoque com Node.js, Prisma e PostgreSQL/MySQL.
+
+## Funcionalidades
+
+### Produtos
+- ✅ Criar produtos com código personalizado
+- ✅ Listar produtos com filtros (código, nome, categoria)
+- ✅ Buscar produto por ID ou código
+- ✅ Atualizar informações do produto
+- ✅ Controle de estoque (adicionar/remover/definir quantidade)
+- ✅ Categorias: Acessórios e Roupas
+- ✅ Campos: código, título, categoria, quantidade, valor unitário, preço de venda
+
+### Vendas
+- ✅ Criar vendas com múltiplos itens
+- ✅ Controle automático de estoque nas vendas
+- ✅ Status de venda (Pendente, Confirmada, Cancelada, Entregue)
+- ✅ Cancelamento com restituição de estoque
+- ✅ Filtros por período, status, cliente
+- ✅ Relatórios de vendas
+
+## 📋 Pré-requisitos
+
+- Node.js 16+
+- PostgreSQL, MySQL ou SQLite
+- npm ou yarn
+
+## 🛠️ Instalação
+
+1. **Clone o repositório**
+```bash
+git clone <seu-repositorio>
+cd sistema-estoque
+```
+
+2. **Instale as dependências**
+```bash
+npm install
+```
+
+3. **Configure o banco de dados**
+```bash
+# Copie o arquivo de exemplo
+cp .env.example .env
+
+# Edite o .env com suas configurações
+```
+
+4. **Execute as migrações**
+```bash
+npx prisma migrate dev --name init
+```
+
+5. **Popule o banco com dados de exemplo (opcional)**
+```bash
+npm run prisma:seed
+```
+
+6. **Inicie o servidor**
+```bash
+npm run dev
+```
+
+## 📚 Endpoints da API
+
+### Produtos
+
+#### POST /api/produtos
+Criar um novo produto
+```json
+{
+  "codigo": "7676",
+  "titulo": "Camiseta Básica",
+  "categoria": "ROUPAS",
+  "quantidade": 50,
+  "valorUnitario": 15.00,
+  "precoVenda": 29.90
+}
+```
+
+#### GET /api/produtos
+Listar produtos com filtros
+- `?search=7676` - Busca por código ou título
+- `?categoria=ROUPAS` - Filtro por categoria
+- `?page=1&limit=10` - Paginação
+
+#### GET /api/produtos/:id
+Buscar produto por ID
+
+#### GET /api/produtos/codigo/:codigo
+Buscar produto por código
+
+#### PUT /api/produtos/:id
+Atualizar produto
+```json
+{
+  "titulo": "Novo título",
+  "quantidade": 100,
+  "precoVenda": 39.90
+}
+```
+
+#### PATCH /api/produtos/:id/estoque
+Atualizar estoque
+```json
+{
+  "quantidade": 10,
+  "operacao": "ADD" // ADD, SUBTRACT ou SET
+}
+```
+
+#### DELETE /api/produtos/:id
+Deletar produto
+
+### Vendas
+
+#### POST /api/vendas
+Criar nova venda
+```json
+{
+  "codigo": "VEN001",
+  "cliente": "João Silva",
+  "itens": [
+    {
+      "produtoId": "uuid-do-produto",
+      "quantidade": 2
+    }
+  ]
+}
+```
+
+#### GET /api/vendas
+Listar vendas com filtros
+- `?search=VEN001` - Busca por código ou cliente
+- `?status=PENDENTE` - Filtro por status
+- `?dataInicio=2025-08-01&dataFim=2025-08-31` - Filtro por período
+- `?page=1&limit=10` - Paginação
+
+#### GET /api/vendas/:id
+Buscar venda por ID
+
+#### GET /api/vendas/codigo/:codigo
+Buscar venda por código
+
+#### PATCH /api/vendas/:id/status
+Atualizar status da venda
+```json
+{
+  "status": "CONFIRMADA"
+}
+```
+
+#### PATCH /api/vendas/:id/cancelar
+Cancelar venda (restitui estoque automaticamente)
+
+#### GET /api/vendas/relatorio
+Relatório de vendas
+- `?dataInicio=2025-08-01&dataFim=2025-08-31` - Período
+
+## 🗂️ Estrutura do Projeto
+
+```
+src/
+├── controllers/
+│   ├── produtoController.js
+│   └── vendaController.js
+├── routes/
+│   ├── produtoRoutes.js
+│   └── vendaRoutes.js
+└── server.js
+
+prisma/
+├── schema.prisma
+└── seed.js
+```
+
+## 🔍 Exemplos de Uso
+
+### Criar um produto
+```bash
+curl -X POST http://localhost:3000/api/produtos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "codigo": "7676",
+    "titulo": "Camiseta Básica Branca",
+    "categoria": "ROUPAS",
+    "quantidade": 50,
+    "valorUnitario": 15.00,
+    "precoVenda": 29.90
+  }'
+```
+
+### Buscar produtos por código
+```bash
+curl http://localhost:3000/api/produtos/codigo/7676
+```
+
+### Criar uma venda
+```bash
+curl -X POST http://localhost:3000/api/vendas \
+  -H "Content-Type: application/json" \
+  -d '{
+    "codigo": "VEN001",
+    "cliente": "João Silva",
+    "itens": [
+      {
+        "produtoId": "uuid-do-produto",
+        "quantidade": 2
+      }
+    ]
+  }'
+```
+
+### Filtrar produtos
+```bash
+# Buscar por código ou título
+curl "http://localhost:3000/api/produtos?search=7676"
+
+# Filtrar por categoria
+curl "http://localhost:3000/api/produtos?categoria=ROUPAS"
+```
+
+## 🎯 Status Codes
+
+- `200` - Sucesso
+- `201` - Criado
+- `400` - Erro de validação
+- `404` - Não encontrado
+- `500` - Erro interno
+
+## 🛡️ Validações
+
+- Códigos únicos para produtos e vendas
+- Validação de estoque antes das vendas
+- Validação de tipos de dados
+- Sanitização de entradas
+
+## 📊 Funcionalidades Avançadas
+
+- **Transações**: Vendas usam transações para garantir consistência
+- **Paginação**: Todos os endpoints de listagem suportam paginação
+- **Filtros**: Busca flexível por código, nome, categoria
+- **Relatórios**: Resumos de vendas por período e status
+- **Controle de Estoque**: Atualização automática nas vendas e cancelamentos
+
+## 🚀 Scripts Disponíveis
+
+```bash
+npm start          # Produção
+npm run dev        # Desenvolvimento
+npm run prisma:generate  # Gerar cliente Prisma
+npm run prisma:migrate   # Executar migrações
+npm run prisma:studio    # Interface visual do banco
+npm run prisma:seed      # Dados de exemplo
+```
+
+## 📝 TODO / Melhorias Futuras
+
+- [ ] Upload de imagens dos produtos
+- [ ] Histórico de movimentação de estoque
+- [ ] Notificações de estoque baixo
+- [ ] Dashboard administrativo
+- [ ] Exportação de relatórios (PDF/Excel)
+- [ ] API de fornecedores
+- [ ] Código de barras

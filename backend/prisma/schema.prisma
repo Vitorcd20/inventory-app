@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  parentId    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  parent      Category?   @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[]  @relation("CategoryHierarchy")
+  
+  products    Product[]
+  
+  @@map("categories")
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  title         String
+  description   String?
+  categoryId    String
+  quantity      Int      @default(0)
+  unitPrice     Float
+  salePrice     Float
+  minStock      Int      @default(0) 
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  category      Category    @relation(fields: [categoryId], references: [id])
+  saleItems     SaleItem[]
+  
+  @@map("products")
+}
+
+model Sale {
+  id          String     @id @default(uuid())
+  code        String     @unique
+  date        DateTime   @default(now())
+  customer    String
+  status      SaleStatus @default(PENDING)
+  totalValue  Float      @default(0)
+  discount    Float      @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  items       SaleItem[]
+  @@map("sales")
+}
+
+model SaleItem {
+  id         String  @id @default(uuid())
+  saleId     String
+  productId  String
+  quantity   Int
+  unitPrice  Float
+  subtotal   Float
+  
+  sale       Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product    Product @relation(fields: [productId], references: [id])
+  
+  @@map("sale_items")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+  MANAGER
+}
+
+enum SaleStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  DELIVERED
+}
