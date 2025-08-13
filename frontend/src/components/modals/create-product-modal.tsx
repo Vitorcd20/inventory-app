@@ -87,6 +87,13 @@ export const CreateProductModal = React.memo(function CreateProductModal({
     setCreateValue('categoryId', value)
   }, [setCreateValue])
 
+  // Debug: log das categorias para verificar se estão chegando
+  useEffect(() => {
+    if (categories && categories.length > 0) {
+      console.log('Categorias disponíveis:', categories)
+    }
+  }, [categories])
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
@@ -152,21 +159,33 @@ export const CreateProductModal = React.memo(function CreateProductModal({
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Carregando categorias...
               </div>
+            ) : categories && categories.length === 0 ? (
+              <div className="flex items-center gap-2 text-sm text-orange-600 p-2 border border-orange-200 rounded bg-orange-50">
+                <AlertCircle className="h-4 w-4" />
+                Nenhuma categoria encontrada
+              </div>
             ) : (
               <Select
                 value={categoryId || ''}
                 onValueChange={handleCategoryChange}
                 disabled={isSubmitting}
+                key={categories?.length} // Force re-render when categories change
               >
                 <SelectTrigger className={errors.categoryId ? 'border-red-500' : ''}>
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {translateCategory(category.name)}
+                  {categories && categories.length > 0 ? (
+                    categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {translateCategory(category.name)}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-options" disabled>
+                      Nenhuma categoria disponível
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             )}
@@ -174,6 +193,12 @@ export const CreateProductModal = React.memo(function CreateProductModal({
               <p className="text-sm text-red-500 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
                 {errors.categoryId.message}
+              </p>
+            )}
+            {/* Debug info - remover em produção */}
+            {process.env.NODE_ENV === 'development' && (
+              <p className="text-xs text-gray-400">
+                Debug: {categories?.length || 0} categorias carregadas
               </p>
             )}
           </div>
